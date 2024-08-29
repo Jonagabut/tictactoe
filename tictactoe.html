@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tic-Tac-Toe</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+        }
+        table {
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+        td {
+            width: 80px;
+            height: 80px;
+            text-align: center;
+            font-size: 36px;
+            border: 2px solid #333;
+            background-color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        td:hover {
+            background-color: #ddd;
+        }
+        td:active {
+            transform: scale(0.95);
+        }
+        .winner {
+            color: green;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .loser {
+            color: red;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .draw {
+            color: orange;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        .scoreboard {
+            margin: 20px auto;
+            font-size: 18px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="scoreboard">
+            <p>Player: <span id="scoreX">0</span> | zona: <span id="scoreO">0</span></p>
+            <button onclick="resetGame()">Reset Game</button>
+        </div>
+        <table>
+            <tr>
+                <td onclick="makeMove(0, 0)"></td>
+                <td onclick="makeMove(0, 1)"></td>
+                <td onclick="makeMove(0, 2)"></td>
+            </tr>
+            <tr>
+                <td onclick="makeMove(1, 0)"></td>
+                <td onclick="makeMove(1, 1)"></td>
+                <td onclick="makeMove(1, 2)"></td>
+            </tr>
+            <tr>
+                <td onclick="makeMove(2, 0)"></td>
+                <td onclick="makeMove(2, 1)"></td>
+                <td onclick="makeMove(2, 2)"></td>
+            </tr>
+        </table>
+        <p id="message"></p>
+    </div>
+    <script>
+        let currentPlayer = 'X';
+        const cells = Array.from(document.querySelectorAll('td'));
+        let board = Array(3).fill(null).map(() => Array(3).fill(''));
+        const winningCombinations = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // Rows
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // Columns
+            [0, 4, 8], [2, 4, 6]              // Diagonals
+        ];
+        let scoreX = 0;
+        let scoreO = 0;
+
+        function makeMove(row, col) {
+            const index = row * 3 + col;
+            const cell = cells[index];
+            if (!cell.textContent && !checkWinner() && !checkDraw()) {
+                cell.textContent = currentPlayer;
+                board[row][col] = currentPlayer;
+                if (!checkWinner()) {
+                    currentPlayer = 'O';
+                    setTimeout(botMove, 500);
+                }
+            }
+        }
+
+        function botMove() {
+            let availableMoves = [];
+            for (let i = 0; i < 9; i++) {
+                const row = Math.floor(i / 3);
+                const col = i % 3;
+                if (!board[row][col]) {
+                    availableMoves.push(i);
+                }
+            }
+
+            let move;
+            if (Math.random() < 0.05) { // 5% chance to make a random move
+                move = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+            } else {
+                move = getBestMove();
+            }
+
+            const row = Math.floor(move / 3);
+            const col = move % 3;
+            const index = row * 3 + col;
+            cells[index].textContent = 'O';
+            board[row][col] = 'O';
+
+            if (checkWinner()) {
+                document.getElementById('message').textContent = 'zona  Wins!';
+                document.getElementById('message').className = 'yah kalah bodoh';
+                scoreO++;
+                updateScore();
+            } else if (checkDraw()) {
+                document.getElementById('message').textContent = 'Draw!';
+                document.getElementById('message').className = 'draw';
+            } else {
+                currentPlayer = 'X';
+            }
+        }
+
+        function getBestMove() {
+            // Implement AI logic for a more sophisticated move
+            for (let i = 0; i < 9; i++) {
+                const row = Math.floor(i / 3);
+                const col = i % 3;
+                if (!board[row][col]) {
+                    return i;
+                }
+            }
+            return 0;
+        }
+
+        function checkWinner() {
+            const flattenedBoard = board.flat();
+            for (const combination of winningCombinations) {
+                const [a, b, c] = combination;
+                if (flattenedBoard[a] && flattenedBoard[a] === flattenedBoard[b] && flattenedBoard[a] === flattenedBoard[c]) {
+                    document.getElementById('message').textContent = `${currentPlayer} Wins!`;
+                    document.getElementById('message').className = 'winner';
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function checkDraw() {
+            return cells.every(cell => cell.textContent) && !checkWinner();
+        }
+
+        function updateScore() {
+            document.getElementById('scoreX').textContent = scoreX;
+            document.getElementById('scoreO').textContent = scoreO;
+        }
+
+        function resetGame() {
+            board = Array(3).fill(null).map(() => Array(3).fill(''));
+            cells.forEach(cell => cell.textContent = '');
+            currentPlayer = 'X';
+            document.getElementById('message').textContent = '';
+        }
+    </script>
+</body>
+</html>
